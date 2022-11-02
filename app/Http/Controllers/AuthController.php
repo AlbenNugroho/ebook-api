@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 
-class AuthContriller extends Controller
+class AuthController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -20,16 +20,22 @@ class AuthContriller extends Controller
 
     public function register(Request $request)
     {
-        $fielda = $request->validate([
+        $fields = $request->validate([
             'name' => 'required|string|max:100',
             'email' => 'required|string|unique:users,email',
             'password' => 'required|string|confirmed|min:6'
         ]);
 
-        $token = $user->createToken('tokenku')->plainTextToken;
+        $users = User::create([
+            'name'=>$fields['name'],
+            'email'=>$fields['email'],
+            'password'=>bcrypt($fields['password'])
+        ]);
+
+        $token = $users->createToken('tokenku')->plainTextToken;
 
         $response = [
-            'user' => $user,
+            'user' => $users,
             'token' => $token
         ];
 
@@ -38,13 +44,13 @@ class AuthContriller extends Controller
 
     public function login(Request $request)
     {
-        $fielda = $request->validate([
+        $fields = $request->validate([
             'email' => 'required|string',
             'password' => 'required|string'
         ]);
 
         // Check email
-        $user = User::where('email', $fielda['email'])->first();
+        $user = User::where('email', $fields['email'])->first();
 
         // Check password
         if (!$user || !Hash::check($fields['password'], $user->password)) {
